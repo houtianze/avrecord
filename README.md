@@ -6,4 +6,4 @@ A very primitive Video / Audio rotating recording (mainly for WebCam) script. Re
 - avconv (`sudo apt-get install libav-tools`)
 
 # Run
-node index.js
+`node index.js`
