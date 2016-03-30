@@ -1,4 +1,9 @@
 # avrecord
-A very primitive Video / Audio rotating recording (mainly for WebCam) script
+A very primitive Video / Audio rotating recording (mainly for WebCam) script. Records forever (until you Ctrl-C), remove old recordings (default older than 7 days).
 
-Requires node.js to run.
+# Requirements
+- node.js
+- avconv (`sudo apt-get install libav-tools`)
+
+# Run
+node index.js
