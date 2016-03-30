@@ -1,6 +1,6 @@
 {
   "name": "avrecord",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A very primitive Video / Audio rotating recording (mainly for WebCam) script",
   "main": "index.js",
   "scripts": {
