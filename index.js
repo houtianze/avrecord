@@ -188,3 +188,7 @@ function main() {
 
 //unittest();
 main();
+
+module.exports = {
+  record: main
+};
