@@ -1,0 +1,25 @@
+{
+  "name": "avrecord",
+  "version": "0.0.0",
+  "description": "A very primitive Video / Audio rotating recording (mainly for WebCam) script",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/houtianze/avrecord.git"
+  },
+  "keywords": [
+    "avrecord",
+    "webcam",
+    "record",
+    "cctv",
+    "surveillance"
+  ],
+  "author": "Hou Tianze",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/houtianze/avrecord/issues"
+  }
+}
