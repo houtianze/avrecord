@@ -7,13 +7,13 @@ A very primitive Video / Audio rotating recording (mainly for WebCam) script. It
 # Requirements
 - node.js
 - avconv (`sudo apt-get install libav-tools`)
-- 80GB freed disk storage (you can tweak the config parameters to decrease the recording size / days to keep the files, etc)
+- 80GB freed disk storage (This is a convervative estimation for the default configuration, you can tweak the config parameters to decrease the recording size / days to keep the files, etc)
 
 # Installation
 `sudo npm install -g avrecord`
 
 # Configuration
-- Create a file named `avrecord.json` in your recording directory with the following format (please refer to the `var config` definition in `avrecord.js`) and change the values:
+- Create a file named `avrecord.json` in your recording directory with the following format (please refer to the `var config` definition in `avrecord.js`) and change the values (especially the input stream address and input streaming format):
 ```
 var config = {
   prog: 'avconv',
@@ -25,4 +25,5 @@ var config = {
 ```
 
 # Run
-(cd to your video archive directory) `avrecord`
+- (cd to your video archive directory)
+- `avrecord`
