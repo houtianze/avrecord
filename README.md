@@ -17,7 +17,7 @@ A very primitive Video / Audio rotating recording (mainly for WebCam) script. It
 ```
 {
   "prog": "avconv",
-  "params": "-f mjpeg -i http://192.168.1.33:8080/video -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning",
+  "params": "'-f mjpeg -i http://192.168.1.33:8080/video -f wav -i http://192.168.1.33:8080/audio.wav -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning",
   "durationInMinutes": 120,
   "sentinelGraceInMinutes": 15,
   "daysToKeep": 7,
