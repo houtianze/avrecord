@@ -3,18 +3,19 @@
 'use strict';
 
 // imports
-const fs = require('fs');
-const util = require('util');
-const proc = require('child_process');
+var fs = require('fs');
+var util = require('util');
+var proc = require('child_process');
 
 // constants
-const ConfigFile = 'avrecord.json';
+var ConfigFile = 'avrecord.json';
 
 // globals
 var config = {
   prog: 'avconv',
   params: '-f mjpeg -i http://192.168.1.33:8080/video -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
   durationInMinutes: 120,
+  sentinelGraceInMinutes: 15,
   daysToKeep: 7,
   delaySecondsOnError: 30
 };
@@ -22,6 +23,7 @@ var config = {
 var stopRecording = false;
 var recordingProc = null;
 var delayedRecordingId = null;
+var guaranteedTerminationId = null;
 
 function saveConfig() {
   fs.writeFile(ConfigFile, JSON.stringify(config), (err) => {
@@ -56,7 +58,7 @@ function prependzero(num, digits) {
 }
 
 function constructVideoFileName(date) {
-  const filename = date.getFullYear() + '-' +
+  var filename = date.getFullYear() + '-' +
     prependzero(date.getMonth() + 1) + '-' +
     prependzero(date.getDate()) + '_' +
     prependzero(date.getHours()) + '.' +
@@ -67,7 +69,7 @@ function constructVideoFileName(date) {
 }
 
 function removeOldRecords(err, files) {
-  const ReVideo = /^(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})_(\d{3})\.avi$/;
+  var ReVideo = /^(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})_(\d{3})\.avi$/;
   files.forEach((f) => {
     //fs.stat(f, ((err, stats) => { // seems this binding is not needed
     fs.stat(f, (err, stats) => {
@@ -98,9 +100,13 @@ function removeOldRecords(err, files) {
   });
 }
 
+function sentinel() {
+  recordingProc.kill('SIGINT');
+}
+
 function spawnRecordingProc() {
-  const now = new Date();
-  const filename = constructVideoFileName(now);
+  var now = new Date();
+  var filename = constructVideoFileName(now);
   console.log(`Recording file: ${filename}`);
   var cmdline = config.prog +
     ' ' + config.params +
@@ -112,6 +118,14 @@ function spawnRecordingProc() {
   recordingProc.stdout.on('data', (data) => { console.log(`${data}`) } );
   recordingProc.stderr.on('data', (data) => { console.error(`${data}`) });
   recordingProc.on('close', recordnew);
+
+  // in case of rare occassions, if avconv doesn't quit after the specified
+  // recording duration, we terminate it proactively. we want it to be reliable.
+  if (guaranteedTerminationId != null) {
+    clearTimeout(guaranteedTerminationId);
+  }
+  guaranteedTerminationId = setTimeout(sentinel,
+    (config.durationInMinutes + config.sentinelGraceInMinutes) * 60 * 1000);
 }
 
 function recordnew(code, signal, firstrun) {
@@ -129,6 +143,9 @@ function recordnew(code, signal, firstrun) {
     spawnRecordingProc();
   } else {
     console.error(`Last recording erred, so we delay ${config.delaySecondsOnError} seconds before recording again`);
+    if (delayedRecodingId != null) {
+      clearTimeout(delayedRecordingId);
+    }
     delayedRecordingId = setTimeout(spawnRecordingProc, config.delaySecondsOnError * 1000);
   }
 }
@@ -145,7 +162,11 @@ function parseConfig(err, data) {
     console.log("Using the default config");
   } else {
     try {
-      config = JSON.parse(data);
+      userConfig = JSON.parse(data);
+      // merge
+      for (var prop in userConfig) {
+        config[prop] = userConfig[prop];
+      }
     } catch (ex) {
       console.log(`Error parsing config file '${ConfigFile}' - Exception: ${ex}`);
       console.log("Using the default config");
@@ -177,6 +198,11 @@ function main() {
       if (delayedRecordingId != null) {
         clearTimeout(delayedRecordingId);
       }
+
+      if (guaranteedTerminationId != null) {
+        clearTimeout(guaranteedTerminationId);
+      }
+
       stopRecording = true;
       console.log("Keyboard interrupt received, killing the recording process ...");
       recordingProc.kill('SIGINT');
