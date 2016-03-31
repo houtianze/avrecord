@@ -143,7 +143,7 @@ function recordnew(code, signal, firstrun) {
     spawnRecordingProc();
   } else {
     console.error(`Last recording erred, so we delay ${config.delaySecondsOnError} seconds before recording again`);
-    if (delayedRecodingId != null) {
+    if (delayedRecordingId != null) {
       clearTimeout(delayedRecordingId);
     }
     delayedRecordingId = setTimeout(spawnRecordingProc, config.delaySecondsOnError * 1000);
@@ -162,7 +162,7 @@ function parseConfig(err, data) {
     console.log("Using the default config");
   } else {
     try {
-      userConfig = JSON.parse(data);
+      var userConfig = JSON.parse(data);
       // merge
       for (var prop in userConfig) {
         config[prop] = userConfig[prop];

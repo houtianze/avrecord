@@ -15,13 +15,14 @@ A very primitive Video / Audio rotating recording (mainly for WebCam) script. It
 # Configuration
 - Create a file named `avrecord.json` in your recording directory with the following format (please refer to the `var config` definition in `avrecord.js`) and change the values (especially the input stream address and input streaming format):
 ```
-var config = {
-  prog: 'avconv',
-  params: '-f mjpeg -i http://192.168.1.33:8080/video -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
-  durationInMinutes: 120,
-  daysToKeep: 7,
-  delaySecondsOnError: 30
-};
+{
+  "prog": "avconv",
+  "params": "-f mjpeg -i http://192.168.1.33:8080/video -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning",
+  "durationInMinutes": 120,
+  "sentinelGraceInMinutes": 15,
+  "daysToKeep": 7,
+  "delaySecondsOnError": 30
+}
 ```
 
 # Run
