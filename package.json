@@ -4,8 +4,9 @@
   "description": "A very primitive Video / Audio rotating recording (mainly for WebCam) script",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node index.js unittest"
   },
+  "bin": "avrecord.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/houtianze/avrecord.git"
