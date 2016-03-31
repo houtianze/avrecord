@@ -12,7 +12,7 @@ const ConfigFile = 'avrecord.json';
 var config = {
   prog: 'avconv',
   params: '-f mjpeg -i http://192.168.1.33:8080/video -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
-  durationInMinutes: 1,
+  durationInMinutes: 120,
   daysToKeep: 7,
   delaySecondsOnError: 30
 };
