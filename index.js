@@ -11,9 +11,8 @@ const ConfigFile = 'avrecord.json';
 // globals
 var config = {
   prog: 'avconv',
-  source: 'http://192.168.1.33:8080/video',
-  durationInMinutes: 120,
-  params: '-f mjpeg -c:v h263 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
+  params: '-f mjpeg -i http://192.168.1.33:8080/video -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
+  durationInMinutes: 1,
   daysToKeep: 7,
   delaySecondsOnError: 30
 };
@@ -101,9 +100,9 @@ function spawnRecordingProc() {
   const now = new Date();
   const filename = constructVideoFileName(now);
   console.log(`Recording file: ${filename}`);
-  var cmdline = config.prog + ' ' + config.params +
+  var cmdline = config.prog +
+    ' ' + config.params +
     ' -t ' + config.durationInMinutes * 60 +
-    ' -i ' + config.source +
     ' ' + filename;
   console.log(`Command: ${cmdline}`);
   recordingProc = proc.exec(cmdline);
@@ -178,7 +177,7 @@ function main() {
       }
       stopRecording = true;
       console.log("Keyboard interrupt received, killing the recording process ...");
-      recordingProc.kill();
+      recordingProc.kill('SIGINT');
       console.log("Recording process killed.");
     }
   });
@@ -186,8 +185,10 @@ function main() {
   fs.stat(ConfigFile, checkConfigExists.bind(ConfigFile));
 }
 
-//unittest();
-//main();
+if (require.main == module) {
+  //unittest();
+  main();
+}
 
 module.exports = {
   record: main
