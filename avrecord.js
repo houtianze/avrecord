@@ -69,13 +69,23 @@ function ms2timestr(ms, keepms) {
   return d + 'd' + prependzero(h) + ':' + str;
 }
 
+function getTimestampStr(date) {
+  return date.getFullYear() + '-' +
+    prependzero(date.getMonth() + 1) + '-' +
+    prependzero(date.getDate()) + '_' +
+    prependzero(date.getHours()) + '.' +
+    prependzero(date.getMinutes()) + '.' +
+    prependzero(date.getSeconds()) + '_' +
+    prependzero(date.getMilliseconds(), 3);
+}
+
 function logtag(tag, msg) {
   var now = new Date();
   var past = '';
   if (recordingStartTime) {
     past = ' (' +  ms2timestr(now.getTime() - recordingStartTime.getTime()) + ')';
   }
-  logit(`${tag}: ${now}${past}: ${msg}`);
+  logit(`${tag}: ${getTimestampStr(now)}${past}: ${msg}`);
 }
 
 function logerr(msg) {
@@ -91,14 +101,7 @@ function loginfo(msg) {
 }
 
 function constructVideoFileName(date) {
-  var filename = date.getFullYear() + '-' +
-    prependzero(date.getMonth() + 1) + '-' +
-    prependzero(date.getDate()) + '_' +
-    prependzero(date.getHours()) + '.' +
-    prependzero(date.getMinutes()) + '.' +
-    prependzero(date.getSeconds()) + '_' +
-    prependzero(date.getMilliseconds(), 3) + '.avi';
-  return filename;
+  return getTimestampStr(date) + '.avi';
 }
 
 function removeOldRecords(err, files) {
@@ -152,8 +155,8 @@ function spawnRecordingProc() {
   loginfo(`Command: ${cmdline}`);
   recordingProc = proc.exec(cmdline);
 
-  recordingProc.stdout.on('data', (data) => { logtag('PROC ', `${data}`) });
-  recordingProc.stderr.on('data', (data) => { logtag('PROC ', `${data}`) });
+  recordingProc.stdout.on('data', (data) => { logtag('PROCO', `${data}`) });
+  recordingProc.stderr.on('data', (data) => { logtag('PROCE', `${data}`) });
   recordingProc.on('close', recordnew);
 
   // in case of rare occassions, if avconv doesn't quit after the specified
