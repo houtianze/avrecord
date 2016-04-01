@@ -139,7 +139,9 @@ function removeOldRecords(err, files) {
 function sentinel() {
   logerr("Recording process failed to exit in the given duration "
     + `(${config.durationInMinutes} minnutes), killing now ...`);
-  recordingProc.kill('SIGINT');
+  // we want to be sure the astray process is killed
+  //recordingProc.kill('SIGINT');
+  recordingProc.kill();
   loginfo("Recording process killed");
 }
 
@@ -246,7 +248,9 @@ function main() {
 
       stopRecording = true;
       loginfo("Keyboard interrupt received, killing the recording process ...");
-      recordingProc.kill('SIGINT');
+      // we want to be sure the astray process is killed
+      //recordingProc.kill('SIGINT');
+      recordingProc.kill();
       loginfo("Recording process killed.");
     }
   });
