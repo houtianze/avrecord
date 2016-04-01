@@ -14,9 +14,10 @@ var ConfigFile = 'avrecord.json';
 var logit = console.log
 
 // globals
+//params: '-f mjpeg -i http://192.168.1.33:8080/video -f wav -i http://192.168.1.33:8080/audio.wav -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
 var config = {
   prog: 'avconv',
-  params: '-f mjpeg -i http://192.168.1.33:8080/video -f wav -i http://192.168.1.33:8080/audio.wav -c:v mpeg4 -b:v 400k -c:a libmp3lame -b:a 64k -loglevel warning',
+  params: '-f mjpeg -r 2 -i http://192.168.1.33:8080/video -f wav -i http://192.168.1.33:8080/audio.wav -map 0:v -map 1:a -c:v mpeg4 -c:a copy -loglevel warning -r 2',
   durationInMinutes: 120,
   sentinelGraceInMinutes: 15,
   daysToKeep: 7,
@@ -140,8 +141,8 @@ function sentinel() {
   logerr("Recording process failed to exit in the given duration "
     + `(${config.durationInMinutes} minnutes), killing now ...`);
   // we want to be sure the astray process is killed
-  //recordingProc.kill('SIGKILL');
-  recordingProc.kill();
+  //recordingProc.kill('SIGINT');
+  recordingProc.kill('SIGKILL');
   loginfo("Recording process killed");
 }
 

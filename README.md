@@ -2,7 +2,8 @@
 [![npm](https://img.shields.io/npm/dm/avrecord.svg)](https://www.npmjs.com/package/avrecord)
 
 # avrecord
-A very primitive Video / Audio rotating recording (mainly for WebCam) script. It records forever (until you Ctrl-C) by intervals (default 2 hours), removes old recordings (default older than 7 days). It should be reliable to run by 24 * 7.
+*Doesn't seem to work well saving to NAS, and recording from an IP Cam*, probably due to how `avconv` requiring high encoding/writing speed?
+A very primitive Video / Audio rotating recording (mainly for WebCam) script. It records forever (until you Ctrl-C) by intervals (default 2 hours), removes old recordings (default older than 7 days).
 
 # Requirements
 - node.js
