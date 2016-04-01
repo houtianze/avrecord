@@ -1,10 +1,10 @@
 {
   "name": "avrecord",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A very primitive Video / Audio rotating recording (mainly for WebCam) script",
   "main": "avrecord.js",
   "scripts": {
-    "test": "node avrecord.js unittest"
+    "test": "node avrecord.js -T"
   },
   "bin": "avrecord.js",
   "repository": {

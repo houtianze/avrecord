@@ -10,6 +10,9 @@ var proc = require('child_process');
 // constants
 var ConfigFile = 'avrecord.json';
 
+// library functions
+var logit = console.log
+
 // globals
 var config = {
   prog: 'avconv',
@@ -22,30 +25,9 @@ var config = {
 
 var stopRecording = false;
 var recordingProc = null;
+var recordingStartTime = null;
 var delayedRecordingId = null;
 var guaranteedTerminationId = null;
-
-function saveConfig() {
-  fs.writeFile(ConfigFile, JSON.stringify(config), (err) => {
-   if (err) {
-    throw err;
-   }
-  });
-}
-
-// +++ Unit Testing +++
-function assert(condition, message) {
-  if (!condition) {
-    throw message || 'Assertion';
-  }
-}
-
-function unittest() {
-  console.log(prependzero(123, 4));
-  assert(prependzero(123, 4) === '0123');
-}
-
-// --- Unit Testing ---
 
 function prependzero(num, digits) {
   digits = digits || 2
@@ -55,6 +37,57 @@ function prependzero(num, digits) {
     var ns = Array(digits - len + 1).join('0').toString() + ns;
   }
   return ns;
+}
+
+function ms2timestr(ms, keepms) {
+  var str = '';
+  if (typeof keepms != 'undefined' && keepms) {
+    str = '.'  + prependzero(ms % 1000, 3);
+  }
+  // http://stackoverflow.com/questions/4228356/integer-division-in-javascript
+  var s = (ms / 1000) | 0;
+  if (s <= 0) {
+    return str;
+  }
+  var sp = s % 60;
+  var m = (s / 60) | 0;
+  if (m <= 0) {
+    return sp + str;
+  }
+  str = prependzero(sp) + str;
+  var mp = m % 60;
+  var h = (m / 60) | 0;
+  if (h <= 0) {
+    return mp + ':' + str;
+  }
+  str = prependzero(mp) + ':' + str;
+  var hp = h % 24;
+  var d = (h / 24) | 0;
+  if (d <= 0) {
+    return h + ':' + str;
+  }
+  return d + 'd' + prependzero(h) + ':' + str;
+}
+
+function logtag(tag, msg) {
+  var now = new Date();
+  var past = '';
+  if (recordingStarTime) {
+    past = ' (' +  ms2timestr(now.getTime() - recordingStartTime.getTime()) + ')';
+  }
+  logit(`${tag}: ${now}${past}: ${msg}`);
+}
+
+function logerr(msg) {
+  logtag('ERROR', msg);
+}
+
+function logwarn(msg) {
+  logtag('WARN ', msg);
+}
+
+function loginfo(msg) {
+  logtag('INFO ', msg);
 }
 
 function constructVideoFileName(date) {
@@ -74,9 +107,9 @@ function removeOldRecords(err, files) {
     //fs.stat(f, ((err, stats) => { // seems this binding is not needed
     fs.stat(f, (err, stats) => {
       //var f = this;
-      //console.log(`File: ${f}`);
+      //loginfo(`File: ${f}`);
       if (err) {
-        console.error(`stat failed on file '${f}'`);
+        logerr(`stat failed on file '${f}'`);
       } else {
         var rr = ReVideo.exec(f);
         if (rr != null) {
@@ -90,7 +123,7 @@ function removeOldRecords(err, files) {
           fileDate.setSeconds(rr[6]);
           fileDate.setMilliseconds(rr[7]);
           if (now.getTime() - fileDate.getTime() > config.daysToKeep * 24 * 60 * 60 * 1000) {
-            console.log(`Removing the old file ${f}`);
+            loginfo(`Removing the old file ${f}`);
             fs.unlink(f);
           }
         }
@@ -101,22 +134,26 @@ function removeOldRecords(err, files) {
 }
 
 function sentinel() {
+  logerr("Recording process failed to exit in the given duration "
+    + `(${config.durationInMinutes} minnutes), killing now ...`);
   recordingProc.kill('SIGINT');
+  loginfo("Recording process killed");
 }
 
 function spawnRecordingProc() {
   var now = new Date();
+  recordingStartTime = now;
   var filename = constructVideoFileName(now);
-  console.log(`Recording file: ${filename}`);
+  loginfo(`Recording file: ${filename}`);
   var cmdline = config.prog +
     ' ' + config.params +
     ' -t ' + config.durationInMinutes * 60 +
     ' ' + filename;
-  console.log(`Command: ${cmdline}`);
+  loginfo(`Command: ${cmdline}`);
   recordingProc = proc.exec(cmdline);
 
-  recordingProc.stdout.on('data', (data) => { console.log(`${data}`) } );
-  recordingProc.stderr.on('data', (data) => { console.error(`${data}`) });
+  recordingProc.stdout.on('data', (data) => { logtag('PROC ', `${data}`) });
+  recordingProc.stderr.on('data', (data) => { logtag('PROC ', `${data}`) });
   recordingProc.on('close', recordnew);
 
   // in case of rare occassions, if avconv doesn't quit after the specified
@@ -130,7 +167,7 @@ function spawnRecordingProc() {
 
 function recordnew(code, signal, firstrun) {
   if (!firstrun) {
-    console.log(`Recording process exited with code ${code}, singal ${signal}`);
+    loginfo(`Recording process exited with code ${code}, singal ${signal}`);
   }
 
   if (stopRecording) {
@@ -142,7 +179,8 @@ function recordnew(code, signal, firstrun) {
   if (code == 0) {
     spawnRecordingProc();
   } else {
-    console.error(`Last recording erred, so we delay ${config.delaySecondsOnError} seconds before recording again`);
+    recordingStartTime = null;
+    logerr(`Last recording erred, so we delay ${config.delaySecondsOnError} seconds before recording again`);
     if (delayedRecordingId != null) {
       clearTimeout(delayedRecordingId);
     }
@@ -152,14 +190,14 @@ function recordnew(code, signal, firstrun) {
 
 // the orchestrator
 function record() {
-  console.log(`Config: ${util.inspect(config)}`);
+  loginfo(`Config: ${util.inspect(config)}`);
   recordnew(0, null, true);
 }
 
 function parseConfig(err, data) {
   if (err) {
-    console.error(`Error reading config file '${ConfigFile}': ${err}`);
-    console.log("Using the default config");
+    logerr(`Error reading config file '${ConfigFile}': ${err}`);
+    loginfo("Using the default config");
   } else {
     try {
       var userConfig = JSON.parse(data);
@@ -168,8 +206,8 @@ function parseConfig(err, data) {
         config[prop] = userConfig[prop];
       }
     } catch (ex) {
-      console.log(`Error parsing config file '${ConfigFile}' - Exception: ${ex}`);
-      console.log("Using the default config");
+      logerr(`Error parsing config file '${ConfigFile}' - Exception: ${ex}`);
+      loginfo("Using the default config");
     }
   }
 
@@ -178,15 +216,15 @@ function parseConfig(err, data) {
 
 function checkConfigExists(err, stats) {
   if (err) {
-    console.log(`Error stating the config file '${ConfigFile}': ${err}`);
-    console.log("Using the default config");
+    logerr(`Error stating the config file '${ConfigFile}': ${err}`);
+    loginfo("Using the default config");
     record();
   } else {
     if (stats.isFile) {
       fs.readFile(this, {encoding: 'utf-8', flag: 'r'}, parseConfig);
     } else {
-      console.log(`Config file '${ConfigFile}' is not a regular file`);
-      console.log("Using the default config");
+      logerr(`Config file '${ConfigFile}' is not a regular file`);
+      loginfo("Using the default config");
       record();
     }
   }
@@ -204,20 +242,47 @@ function main() {
       }
 
       stopRecording = true;
-      console.log("Keyboard interrupt received, killing the recording process ...");
+      loginfo("Keyboard interrupt received, killing the recording process ...");
       recordingProc.kill('SIGINT');
-      console.log("Recording process killed.");
+      loginfo("Recording process killed.");
     }
   });
 
   fs.stat(ConfigFile, checkConfigExists.bind(ConfigFile));
 }
 
+// +++ Not really used +++
+function saveConfig() {
+  fs.writeFile(ConfigFile, JSON.stringify(config), (err) => {
+   if (err) {
+    throw err;
+   }
+  });
+}
+// --- Not really used ---
+
+// +++ Unit Testing +++
+function assert(condition, message) {
+  if (!condition) {
+    throw message || 'Assertion';
+  }
+}
+
+function unittest() {
+  logit(prependzero(123, 4));
+  assert(prependzero(123, 4) === '0123');
+}
+// --- Unit Testing ---
+
 if (require.main == module) {
-  //unittest();
-  main();
+  if (process.argv.length === 3 && process.argv[2] == '-T') {
+    unittest();
+  } else {
+    main();
+  }
 }
 
 module.exports = {
-  record: main
+  record: main,
+  unittest: unittest
 };
