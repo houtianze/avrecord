@@ -140,7 +140,7 @@ function sentinel() {
   logerr("Recording process failed to exit in the given duration "
     + `(${config.durationInMinutes} minnutes), killing now ...`);
   // we want to be sure the astray process is killed
-  //recordingProc.kill('SIGINT');
+  //recordingProc.kill('SIGKILL');
   recordingProc.kill();
   loginfo("Recording process killed");
 }
@@ -248,9 +248,7 @@ function main() {
 
       stopRecording = true;
       loginfo("Keyboard interrupt received, killing the recording process ...");
-      // we want to be sure the astray process is killed
-      //recordingProc.kill('SIGINT');
-      recordingProc.kill();
+      recordingProc.kill('SIGINT');
       loginfo("Recording process killed.");
     }
   });
