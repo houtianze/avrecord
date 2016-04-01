@@ -72,7 +72,7 @@ function ms2timestr(ms, keepms) {
 function logtag(tag, msg) {
   var now = new Date();
   var past = '';
-  if (recordingStarTime) {
+  if (recordingStartTime) {
     past = ' (' +  ms2timestr(now.getTime() - recordingStartTime.getTime()) + ')';
   }
   logit(`${tag}: ${now}${past}: ${msg}`);
