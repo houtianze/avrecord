@@ -120,7 +120,7 @@ function removeOldRecords(err, files) {
           var now = new Date();
           fileDate.setFullYear(rr[1]);
           fileDate.setMonth(rr[2] - 1);
-          fileDate.setDay(rr[3]);
+          fileDate.setDate(rr[3]);
           fileDate.setHours(rr[4]);
           fileDate.setMinutes(rr[5]);
           fileDate.setSeconds(rr[6]);
